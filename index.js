@@ -3,90 +3,57 @@ import { connection } from "./database.js";
 const app = express();
 app.use(express.json());
 
-app.post("/products", async (req,res)=>{
+app.post("/products", async (req, res) => {
+  try {
     await connection.execute(
-        "INSERT INTO products (name,price) VALUES (?,?)",[req.body.name, req.body.price]
+      "INSERT INTO products (id,name,price) VALUES (?,?,?)",
+      [req.body.id, req.body.name, req.body.price]
     );
-    res.send("product berhasil ditambah");
-})
+    res.send("UHUY PRODUCT BERHASIL DITAMBAH !");
+  } catch (error) {
+    console.log(error);
+    res.send("ID NYA GABOLEH SAMA BRAY");
+  }
+});
 
-app.put("/products/:id", async(req,res)=>{
-    await connection.execute(
-        "UPDATE products set name=?, price=? WHERE id=?",[req.body.name, req.body.price, req.params.id]
+// Get By Id
+app.get("/products/:id", async (req, res) => {
+  try {
+    const result = await connection.query(
+      "SELECT * from products where id=?",
+      [req.params.id]
     );
-    res.send("Product berhasil di update");
-})
-
-app.get("/products", async(req,res)=>{
-    const result= await connection.query("SELECT * from products");
+    if (result.length == 0) res.status(404).send("Id Tidak Ditemukan");
     res.json(result);
-})
+  } catch (error) {
+    // res.status(404).send("Id Tidak Ditemukan");
+  }
+});
 
-app.delete("/products/:id", async (req,res)=>{
-    await connection.execute(
-        "DELETE from products WHERE id=?",[req.params.id]
+app.put("/products/:id", async (req, res) => {
+  await connection.execute("UPDATE products set name=?, price=? WHERE id=?", [
+    req.body.name,
+    req.body.price,
+    req.params.id,
+  ]);
+  res.send("Product berhasil di update");
+});
 
-    )
-    res.send("PRODUCT BERHASIL DIHAPUS")
-})
-// TANPA BASIS DATA
-// let datas=[];
+app.get("/products", async (req, res) => {
+  const result = await connection.query("SELECT * from products");
+  res.json(result);
+});
 
-// app.get("/coba",(req,res)=>{
-//     res.send("hello word");
-// })
-
-// app.post("/addData",(req,res)=>{
-//     datas.push(req.body);
-//     res.send("data berhasil ditambah");
-// })
-
-// app.get("/getData",(req,res)=>{
-//     res.send(datas);
-// });
-
-// // update by index
-// app.put("/updateData/:index",(req,res)=>{
-//     const dataIndex=datas.findIndex((data,i)=>i == req.params.index)
-//     if(dataIndex === -1){
-//         res.send("data tidak ditemukan");
-//     }
-//     datas[dataIndex]= req.body;
-//     console.log( datas[dataIndex]);
-//     res.send("data berhasil diubah");
-// })
-// // update by id
-// app.put("/updateById/:id",(req,res)=>{
-//   const dataId=datas.findIndex((data)=>data.id == req.params.id);
-
-//   if(dataId === -1){
-//     res.status(404).send("data tidak ditemukan");
-//   }
-//   datas[dataId]={...datas[dataId], ...req.body}
-
-//   res.send("data by id berhasil di ubah ");
-// })
-
-// app.delete("/deleteData/:index",(req,res)=>{
-//     const dataIndex=datas.findIndex((data,i)=>i == req.params.index)
-//     if(dataIndex === -1){
-//         res.send("data tidak ditemukan");
-//     }
-//     datas.splice(dataIndex,1);
-//     res.send("data berhasil dihapus")
-// })
-
-// // delete by id
-// app.delete("/deleteById/:id",(req,res)=>{
-    
-//     const dataIndex=datas.findIndex((data)=>data.id == req.params.id)
-//     if(dataIndex === -1){
-//         res.send("data tidak ditemukan");
-//     }
-//     datas.splice(dataIndex,1);
-//     res.send("data berhasil dihapus")
-// })
-
+app.delete("/products/:id", async (req, res) => {
+  try {
+    await connection.execute("DELETE from products WHERE id=?", [
+      req.params.id,
+    ]);
+    res.send("PRODUCT BERHASIL DIHAPUS");
+  } catch (error) {
+    res.send("Id tidak dapat ditemukan");
+  }
+});
 
 // menjalankan server
-app.listen(3000, ()=> console.log("server berjalan"));
+app.listen(3000, () => console.log("server berjalan"));
